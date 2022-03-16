@@ -1,5 +1,4 @@
 // @ts-ignore
-
 const express = require('express');
 require('dotenv').config();
 const http = require('http');
@@ -9,7 +8,6 @@ const Server = http.createServer(app)
 const sequelize = require('./util/database.ts')
 const PORT = process.env.PORT || '3000';
 const indexRouter = require('./routs/IndexRoute');
-const bodyParser = require('body-parser')
 
 async function start() {
   try {
@@ -25,11 +23,10 @@ start().then(data=>{
   console.log(data)
 }).catch(err=>{
   console.log(err)
-})
+});
+
 app.use(express.json());
-app.use(express.urlencoded());
-app.use(bodyParser.urlencoded({extended: true}))
-app.use(bodyParser.json())
+
 
 app.use('/',indexRouter)
 

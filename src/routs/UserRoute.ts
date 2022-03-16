@@ -2,12 +2,12 @@
 let express = require('express')
 // @ts-ignore
 const router = express.Router();
-const {loginUser, registerUser, editUSer,getUsersList} = require('../controllers/UserController')
+const {loginUser, registerUser, editUser,getUsersList} = require('../controllers/UserController')
 const auth = require('../middleware/auth');
 
 router.post('/register', registerUser);
 router.post('/login', loginUser);
-router.put('/edit', auth, editUSer);
+router.put('/edit', auth, editUser);
 router.get('/list',auth, getUsersList);
 
 

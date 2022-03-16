@@ -5,56 +5,61 @@ const {User} = require('../models/model')
 // @ts-ignore
 const jwt = require('jsonwebtoken')
 
+
+const generateJwt = (id, email) => {
+    return jwt.sign(
+        {id, email},
+        process.env.SECRET_KEY,
+        {expiresIn: '24h'}
+    )
+}
+
 class UserController{
+
     async registerUser(req,res){
         try {
-            const {username,email, password} = req.body;
-            console.log(req.body);
-            const findUserEmail = await User.findOne({where: {email}});
+            const {username,email, password}: any = req.body;
+            const findUserEmail: object = await User.findOne({where: {email}});
 
-            if (!findUserEmail){
-                let hashPassword = bcrypt.hashSync(password,16);
-                let user = await User.create({ username,email, password: hashPassword});
-                res.json({info: {
-                        username: user.username,
-                        email: user.email,
-                    }});
-            }else {
-                res.json({error: 'There is such a user'});
-            }
+            if (findUserEmail) res.json({error: 'Пользователь с таким email уже существует'});
+
+            let hashPassword: boolean = bcrypt.hashSync(password);
+            let user: any = await User.create({ username,email, password: hashPassword});
+            res.json({
+                info: {
+                    username: user.username,
+                    email: user.email,
+                }
+            });
 
         }catch (e) {
             res.json({error: e.message});
         }
     }
+
 
 
     async loginUser(req,res){
         try {
-            const {email, password} = req.body;
+            const {email, password}: any = req.body;
 
-            const findUser = await User.findOne({where:{email}});
-            if (findUser) {
-                let comparePassword = bcrypt.compare(password, findUser.password);
+            const findUser: any = await User.findOne({where:{email}});
 
-                if (comparePassword){
-                    let payload = {
-                        id: findUser.id,
-                        email: findUser.email,
-                    };
+            if (!findUser)  res.json({error: 'Пользователь не найден'});
 
-                    let token = jwt.sign(payload,process.env.SECRET_KEY,{expiresIn: '10h'});
-                    res.json({token,user: {
-                            username: findUser.username,
-                            email: findUser.email
-                        }});
-                }else {
-                    res.json({error: 'wrong password'})
+            let comparePassword: boolean = bcrypt.compare(password, findUser.password);
+
+            if (!comparePassword)  res.json({error: 'Указан неверный пароль'});
+
+            let token: string = generateJwt(findUser.id, findUser.email);
+
+            return res.json({
+                token,
+                info: {
+                    id: findUser.id,
+                    email: findUser.email,
                 }
-
-            }else {
-                res.json({error: 'wrong email'});
-            }
+            });
 
         }catch (e) {
             res.json({error: e.message});
@@ -62,22 +67,27 @@ class UserController{
     }
 
 
-    async editUSer(req,res){
+    async editUser(req,res){
         try{
-            const {username,email,password} = req.body;
-            const hashPassword = bcrypt.hashSync(password);
+            const {username,email,password}: any = req.body;
+            const hashPassword: boolean = bcrypt.hashSync(password);
 
-            await User.update({
-                username,
-                email,
-                password: hashPassword,
-            }, {where: {id: req.auth.id}}).then(data=>{
-                console.log(data);
-                res.json({data:{
-                        username: data.username,
-                        email: data.email
-                    }})
-            });
+            await User.update(
+                {
+                    username: username,
+                    email: email,
+                    password: hashPassword
+                },
+                {
+                    where: {
+                        id: req.auth.id
+                    }
+                }
+            ).then(()=>{
+                res.json({
+                    info: 'Success'
+                })
+            })
 
         } catch (e) {
             res.json({error: e.message});
@@ -86,8 +96,8 @@ class UserController{
 
     async getUsersList(req,res){
         try {
-            await User.findAll().then(data=>{
-                res.json(data)
+            await User.findAll().then((data:[])=>{
+                res.json({data})
             })
         }catch (e) {
             res.json({error: e.message});
