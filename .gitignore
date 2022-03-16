@@ -1,2 +1,3 @@
-node_modules
-.ideagit init
+./node_modules
+./.idea
+./.env
